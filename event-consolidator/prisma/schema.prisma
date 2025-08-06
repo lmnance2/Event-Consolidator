@@ -1,0 +1,44 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Source {
+  TICKETMASTER
+  EVENTBRITE
+  MEETUP
+}
+
+model User {
+  id               String   @id @default(cuid())
+  name             String
+  email            String
+  hashedPassword   String
+  location_default String
+  interests        String?
+  rsvps            Event[]
+  createdAt        DateTime @default(now())
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  address     String
+  city        String
+  date        DateTime
+  price       String?
+  category    String?
+  source      Source?
+  externalURL String
+
+  User   User?   @relation(fields: [userId], references: [id])
+  userId String?
+}
