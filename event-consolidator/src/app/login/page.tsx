@@ -2,55 +2,46 @@
 import React, {useState, FormEvent, useEffect, useRef} from 'react';
 import {useRouter} from "next/navigation";
 //import prisma from "@/lib/db";
-import createUser from "@/actions/actions";
+import {LogIn, SignUp} from '@/auth/nextjs/actions';
 
 export default function LoginPage(){
-  const [users, setUsers] = useState({})
-  /*useEffect(() => {
-    async function fetchData(){
-      const userList = await prisma.user.findMany();
-      setUsers(userList);
-    }
-    fetchData();
-  }, []); */
-
-  const isFirstRender = useRef(true);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState('');
   const [zipCode, setZipCode] = useState('');
-  const [formData, setFormData] = useState(new FormData());
-
-  useEffect(() => {
-    console.log("In posting use effect");
-    if(isFirstRender.current){
-      isFirstRender.current = false;
-      return;
-    }
-    async function postUser(){
-      console.log("In postUsers");
-      await createUser(formData);
-      console.log("After user created (hopefully)");
-    }
-    postUser();
-  }, [formData])
 
   const router = useRouter();
 
   // Handle submit call with storing in database via API Post call, later
-  function onSubmit(e: FormEvent<HTMLFormElement>){
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Shown submitted");
-    const newFormData = new FormData(e.currentTarget);
+    
+    setEmail('');
+    setPassword('');
+    setIsLogin(true);
+    setName('');
+    setZipCode('');
+    let result;
+    const formData = new FormData(e.currentTarget);
     if(!isLogin) {
-      console.log("In sign up area");
-      setFormData(newFormData);
-      console.log("Set form data changed");
+      try {
+        await SignUp(formData);
+      } catch (err){
+        console.log(`Error signing up: ${err}`);
+      }
+    } else {
+      try {
+        result = await LogIn(formData);
+        console.log(result);
+      } catch (err){
+        console.log(`Error signing up: ${err}`);
+      }
     }
+    
     console.log(`Submitted account information with \n Email: ${email}\n Password: ${password}`);
-    //router.push("/dashboard")
+    
   }
 
   return(
@@ -63,7 +54,7 @@ export default function LoginPage(){
           {isLogin ? "Login to your account" : "Create a new account"}
         </p>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
             <input
               type="text"
@@ -99,6 +90,8 @@ export default function LoginPage(){
           name="zip code"
           placeholder="Zip Code"
           value={zipCode}
+          minLength={5}
+          maxLength={5}
           onChange={(e) => setZipCode(e.target.value)}
           required
           className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300"
@@ -110,6 +103,21 @@ export default function LoginPage(){
           >
             {isLogin ? "Sign In" : "Create Account"}
           </button>
+
+          { isLogin && (
+            <button 
+            type="button"
+            onClick={() => window.location.href = "/api/auth/google"}
+            className="w-full flex items-center justify-center border border-gray-300 rounded-lg bg-white text-gray-700 font-medium py-2 hover:bg-gray-50 transition"
+            >
+              <svg className="mr-3" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 48 48">
+                <path fill="#EA4335" d="M24 9.5c3.54 0 6.72 1.22 9.21 3.6l6.85-6.85C35.64 2.72 30.13 0 24 0 14.64 0 6.4 5.37 2.57 13.11l7.98 6.19C12.43 13.05 17.74 9.5 24 9.5z"/>
+                <path fill="#4285F4" d="M46.1 24.5c0-1.57-.14-3.07-.39-4.5H24v9h12.63c-.54 2.94-2.16 5.42-4.63 7.08l7.17 5.57C43.19 38.55 46.1 31.92 46.1 24.5z"/>
+                <path fill="#FBBC05" d="M10.55 28.92c-.48-1.43-.75-2.94-.75-4.42s.27-2.99.75-4.42l-7.98-6.19C.92 17.34 0 20.57 0 24s.92 6.66 2.57 9.42l7.98-6.19z"/>
+                <path fill="#34A853" d="M24 48c6.13 0 11.64-2.03 15.52-5.51l-7.17-5.57c-2 1.35-4.6 2.14-8.35 2.14-6.26 0-11.57-3.55-13.45-8.8l-7.98 6.19C6.4 42.63 14.64 48 24 48z"/>
+              </svg>              Sign in with Google
+            </button>
+          )}
         </form>
 
         <div className="mt-6 text-center text-sm text-gray-600">

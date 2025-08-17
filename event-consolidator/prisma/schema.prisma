@@ -16,29 +16,41 @@ enum Source {
   MEETUP
 }
 
+enum UserRole {
+  ADMIN
+  USER
+}
+
 model User {
   id               String   @id @default(cuid())
   name             String
-  email            String
+  email            String   @unique
+  password         String
+  salt             String
   hashedPassword   String
+  role             UserRole @default(USER)
   location_default String
   interests        String?
   rsvps            Event[]
   createdAt        DateTime @default(now())
+  updatedAt        DateTime @default(now()) @updatedAt
 }
 
 model Event {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  address     String
-  city        String
-  date        DateTime
-  price       String?
-  category    String?
-  source      Source?
-  externalURL String
-
-  User   User?   @relation(fields: [userId], references: [id])
-  userId String?
+  id           String   @id @default(cuid())
+  title        String
+  description  String?
+  address      String
+  longitude    Float
+  latitude     Float
+  city         String
+  date         DateTime
+  minPrice     Float?
+  maxPrice     Float?
+  minPriceType String?
+  maxPriceType String?
+  category     String?
+  source       Source?
+  externalURL  String
+  Users        User[]
 }
